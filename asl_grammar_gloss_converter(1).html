@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASL Gloss & Grammar Studio</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        asl: {
+                            time: '#8b5cf6',     // Violet
+                            topic: '#0ea5e9',    // Sky Blue
+                            comment: '#10b981',  // Emerald
+                            question: '#f59e0b', // Amber
+                            negation: '#f43f5e'  // Rose
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom styling for ASL Non-Manual Marker (NMM) top bar notation */
+        .gloss-token {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .gloss-token:hover {
+            transform: translateY(-3px);
+        }
+        .nmm-line {
+            border-top: 3px solid currentColor;
+            padding-top: 2px;
+        }
+        @keyframes pulse-subtle {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .animate-pulse-subtle {
+            animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col selection:bg-indigo-100 selection:text-indigo-900">
+
+    <!-- Top Navigation Bar -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-sm shadow-indigo-200">
+                    <i data-lucide="hand-metal" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg tracking-tight text-slate-900 flex items-center gap-2 flex-wrap">
+                        ASL Gloss Studio
+                        <span class="text-xs font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-200">AI Powered</span>
+                        <span class="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 shadow-2xs">
+                            <i data-lucide="award" class="w-3 h-3 text-amber-600"></i>
+                            By Taha
+                        </span>
+                    </h1>
+                    <p class="text-xs text-slate-500 hidden sm:block">English to American Sign Language Grammar & Syntax Converter</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button id="toggleGuideBtn" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors">
+                    <i data-lucide="book-open" class="w-4 h-4 text-indigo-600"></i>
+                    <span>Grammar Cheat Sheet</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Collapsible Grammar Cheat Sheet Modal / Drawer -->
+    <div id="grammarGuideDrawer" class="hidden bg-indigo-950 text-white border-b border-indigo-800 transition-all">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-sm font-bold uppercase tracking-wider text-indigo-300 flex items-center gap-2">
+                    <i data-lucide="sparkles" class="w-4 h-4"></i> Core ASL Grammar Rules (Time - Topic - Comment)
+                </h2>
+                <button id="closeGuideBtn" class="text-indigo-300 hover:text-white p-1 rounded-lg">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+                <div class="bg-indigo-900/60 border border-indigo-800 p-3.5 rounded-xl">
+                    <span class="inline-block px-2 py-0.5 rounded bg-violet-500/20 text-violet-300 font-mono font-bold mb-1.5">1. TIME FIRST</span>
+                    <p class="text-indigo-100 leading-relaxed">Time indicators (<span class="font-mono text-white">YESTERDAY, TOMORROW, NOW</span>) always go at the very beginning of the sentence to set the tense.</p>
+                </div>
+                <div class="bg-indigo-900/60 border border-indigo-800 p-3.5 rounded-xl">
+                    <span class="inline-block px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 font-mono font-bold mb-1.5">2. TOPIC + COMMENT</span>
+                    <p class="text-indigo-100 leading-relaxed">Establish the main subject/object first (<span class="font-mono text-white">MOVIE</span>), then sign the action or description (<span class="font-mono text-white">I WATCH</span>).</p>
+                </div>
+                <div class="bg-indigo-900/60 border border-indigo-800 p-3.5 rounded-xl">
+                    <span class="inline-block px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono font-bold mb-1.5">3. DROP LINKING WORDS</span>
+                    <p class="text-indigo-100 leading-relaxed">Articles (<span class="italic">a, an, the</span>) and linking verbs (<span class="italic">is, am, are, was, were</span>) are omitted in ASL Gloss.</p>
+                </div>
+                <div class="bg-indigo-900/60 border border-indigo-800 p-3.5 rounded-xl">
+                    <span class="inline-block px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono font-bold mb-1.5">4. QUESTIONS AT END</span>
+                    <p class="text-indigo-100 leading-relaxed">WH-words (<span class="font-mono text-white">WHO, WHAT, WHERE, WHY</span>) move to the very end with furrowed eyebrows.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Container -->
+    <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+
+        <!-- Quick Example Pills -->
+        <div class="mb-6">
+            <div class="flex items-center justify-between mb-2.5">
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                    <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-500"></i>
+                    Try an example sentence:
+                </span>
+            </div>
+            <div class="flex flex-wrap gap-2" id="exampleButtonsContainer">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+
+        <!-- Converter Dual Panel Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+            <!-- Left Column: English Input (5 cols on lg) -->
+            <div class="lg:col-span-5 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+                <div class="px-5 py-3.5 bg-slate-50/80 border-b border-slate-200 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-600">English Input</span>
+                    </div>
+                    <button id="clearInputBtn" class="text-xs text-slate-400 hover:text-slate-600 font-medium flex items-center gap-1 transition-colors">
+                        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Clear
+                    </button>
+                </div>
+
+                <div class="p-5 flex-1 flex flex-col">
+                    <label for="englishInput" class="sr-only">Enter English text to convert to ASL Gloss</label>
+                    <textarea
+                        id="englishInput"
+                        rows="5"
+                        placeholder="Type any English sentence here... (e.g., 'Where are you going tomorrow morning?')"
+                        class="w-full resize-none border-0 focus:ring-0 text-slate-800 placeholder-slate-400 text-lg leading-relaxed bg-transparent focus:outline-none"
+                    >Where are you going tomorrow morning?</textarea>
+
+                    <!-- Action Bar inside Input Card -->
+                    <div class="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
+                        <span id="charCount" class="text-xs text-slate-400 font-mono">38 chars</span>
+                        <button
+                            id="convertBtn"
+                            class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-semibold text-sm shadow-sm shadow-indigo-200 transition-all cursor-pointer disabled:opacity-60"
+                        >
+                            <i data-lucide="wand-2" class="w-4 h-4"></i>
+                            <span>Convert to ASL Gloss</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Formula Reference Bar -->
+                <div class="px-5 py-3 bg-slate-50 border-t border-slate-200/80 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+                    <span class="font-medium">Target Structure:</span>
+                    <div class="flex items-center gap-1 font-mono text-[11px]">
+                        <span class="px-1.5 py-0.5 rounded bg-violet-100 text-violet-700 font-semibold">TIME</span>
+                        <span>+</span>
+                        <span class="px-1.5 py-0.5 rounded bg-sky-100 text-sky-700 font-semibold">TOPIC</span>
+                        <span>+</span>
+                        <span class="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 font-semibold">COMMENT</span>
+                        <span>+</span>
+                        <span class="px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 font-semibold">Q/NEG</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: ASL Gloss Output & Breakdown (7 cols on lg) -->
+            <div class="lg:col-span-7 flex flex-col gap-6">
+
+                <!-- Primary ASL Gloss Card -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden relative">
+                    <div class="px-5 py-3.5 bg-slate-50/80 border-b border-slate-200 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-indigo-600"></span>
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-700">ASL Gloss Output</span>
+                            <span id="sentenceTypeBadge" class="ml-2 px-2 py-0.5 text-[11px] font-semibold rounded-full bg-amber-100 text-amber-800">
+                                WH-Question
+                            </span>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <button id="copyGlossBtn" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 transition-colors" title="Copy plain text ASL Gloss">
+                                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                                <span id="copyBtnText">Copy Gloss</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Loading Overlay -->
+                    <div id="loadingOverlay" class="hidden absolute inset-0 bg-white/90 backdrop-blur-xs z-20 flex flex-col items-center justify-center p-6 text-center">
+                        <div class="w-10 h-10 border-3 border-indigo-600 border-t-transparent rounded-full animate-spin mb-3"></div>
+                        <p class="text-sm font-semibold text-slate-800">Analyzing English syntax & converting to ASL Gloss...</p>
+                        <p class="text-xs text-slate-500 mt-1">Applying Time-Topic-Comment order & removing linking verbs</p>
+                    </div>
+
+                    <!-- Error Banner -->
+                    <div id="errorBanner" class="hidden m-4 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-start gap-2.5">
+                        <i data-lucide="alert-triangle" class="w-4 h-4 text-rose-600 shrink-0 mt-0.5"></i>
+                        <div class="flex-1">
+                            <p class="font-semibold">Notice</p>
+                            <p id="errorBannerMessage" class="mt-0.5 text-rose-700"></p>
+                        </div>
+                    </div>
+
+                    <div class="p-6">
+                        <!-- Interactive Color-Coded Gloss Tokens -->
+                        <div class="mb-2 text-[11px] font-medium text-slate-400 uppercase tracking-wider">Color-Coded Sign Order (Hover or tap tokens for details):</div>
+                        <div id="glossTokensContainer" class="flex flex-wrap items-end gap-3 py-3 min-h-[84px]">
+                            <!-- Dynamically populated tokens -->
+                        </div>
+
+                        <!-- Raw String Gloss Box -->
+                        <div class="mt-4 pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-slate-50 px-4 py-2.5 rounded-xl">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-semibold text-slate-400">Standard Written Gloss:</span>
+                                <code id="rawGlossString" class="font-mono font-bold text-sm text-slate-800 tracking-wide">TOMORROW MORNING YOU GO WHERE</code>
+                            </div>
+                            <span class="text-[11px] text-slate-400">ALL CAPS = English word for ASL sign</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Facial Expressions (Non-Manual Markers) & Removed Words Row -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Non-Manual Markers (NMM) Card -->
+                    <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+                                <i data-lucide="smile-plus" class="w-4 h-4 text-indigo-600"></i>
+                                <span>Facial Grammar (NMM)</span>
+                            </div>
+                            <p id="nmmText" class="text-sm font-medium text-slate-800 leading-snug">
+                                Furrow eyebrows and tilt head slightly forward on "WHERE".
+                            </p>
+                        </div>
+                        <div class="mt-3 pt-2.5 border-t border-slate-100 text-[11px] text-slate-400 flex items-center gap-1">
+                            <i data-lucide="info" class="w-3.5 h-3.5"></i>
+                            <span>In ASL, eyebrow position marks questions & topics.</span>
+                        </div>
+                    </div>
+
+                    <!-- Omitted English Words Card -->
+                    <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+                                <i data-lucide="scissors" class="w-4 h-4 text-rose-500"></i>
+                                <span>Dropped English Words</span>
+                            </div>
+                            <div id="droppedWordsContainer" class="flex flex-wrap gap-1.5 mt-1">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+                        <div class="mt-3 pt-2.5 border-t border-slate-100 text-[11px] text-slate-400 flex items-center gap-1">
+                            <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-500"></i>
+                            <span>Linking verbs & articles aren't signed directly.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Grammar Rules Applied Card -->
+                <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-600 flex items-center gap-2">
+                            <i data-lucide="list-checks" class="w-4 h-4 text-indigo-600"></i>
+                            <span>Grammar Transformation Breakdown</span>
+                        </h3>
+                    </div>
+                    <ul id="rulesList" class="space-y-2.5 text-sm text-slate-700">
+                        <!-- Populated by JS -->
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-auto border-t border-slate-200 bg-white py-4">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 gap-3">
+            <p>ASL Gloss represents signs using capital English words. Hyphens (e.g., <span class="font-mono">DON'T-KNOW</span>) mean one sign represents multiple words; pluses (<span class="font-mono">fs-JOHN</span>) indicate fingerspelling.</p>
+            <div class="flex items-center gap-3 shrink-0">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-700 font-semibold border border-slate-200">
+                    <i data-lucide="code-2" class="w-3.5 h-3.5 text-indigo-600"></i>
+                    Created by Taha
+                </span>
+                <span class="text-slate-300">|</span>
+                <p class="font-medium text-slate-500">Powered by Gemini 3 Flash</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Application Script -->
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Pre-loaded instant example sentences with rich fallback data so the app works immediately on load
+        const EXAMPLES = [
+            {
+                label: "Tomorrow Question",
+                english: "Where are you going tomorrow morning?",
+                data: {
+                    rawGloss: "TOMORROW MORNING IX-you GO WHERE",
+                    sentenceType: "WH-Question",
+                    tokens: [
+                        { gloss: "TOMORROW", role: "TIME", note: "Establishes future tense first" },
+                        { gloss: "MORNING", role: "TIME", note: "Specific time of day" },
+                        { gloss: "IX-you", role: "TOPIC", note: "Point to the person ('you')" },
+                        { gloss: "GO", role: "COMMENT", note: "Root action verb (dropped '-ing')" },
+                        { gloss: "WHERE", role: "QUESTION", note: "WH-question word moved to the end" }
+                    ],
+                    omittedWords: ["are", "-ing (from going)"],
+                    nonManualMarkers: "Raise eyebrows slightly on 'TOMORROW MORNING', then furrow eyebrows (squint) and lean head slightly forward on 'WHERE'.",
+                    rulesApplied: [
+                        "Time First Rule: Moved 'tomorrow morning' to the very beginning of the sentence to establish tense.",
+                        "Dropped Linking Verb: Removed the English helping verb 'are' and converted 'going' to its base sign 'GO'.",
+                        "Question at End: Placed the WH-question word 'WHERE' at the very end of the sentence."
+                    ]
+                }
+            },
+            {
+                label: "Past Tense + Article Removal",
+                english: "I watched a really good movie with my friend yesterday.",
+                data: {
+                    rawGloss: "YESTERDAY MOVIE GOOD++ IX-me FRIEND WITH WATCH-PAST",
+                    sentenceType: "Statement",
+                    tokens: [
+                        { gloss: "YESTERDAY", role: "TIME", note: "Sets past tense immediately" },
+                        { gloss: "MOVIE", role: "TOPIC", note: "Main object/topic established first" },
+                        { gloss: "GOOD++", role: "COMMENT", note: "Exaggerated sign for 'really good'" },
+                        { gloss: "IX-me", role: "TOPIC", note: "Point to chest ('I')" },
+                        { gloss: "FRIEND", role: "TOPIC", note: "Accompanying person" },
+                        { gloss: "WITH", role: "COMMENT", note: "Shows 'together with'" },
+                        { gloss: "WATCH", role: "COMMENT", note: "Action verb (tense already set by YESTERDAY)" }
+                    ],
+                    omittedWords: ["a", "really", "my", "-ed (past suffix)"],
+                    nonManualMarkers: "Raise eyebrows slightly when establishing the topic 'MOVIE', and nod warmly on 'GOOD++'.",
+                    rulesApplied: [
+                        "Time Indicator First: Moved 'yesterday' to the start so you don't need to conjugate 'watched' into past tense.",
+                        "Article Removal: Removed the indefinite article 'a' before movie.",
+                        "Topic-Comment Order: Introduced 'MOVIE' as the topic before describing the action of watching it."
+                    ]
+                }
+            },
+            {
+                label: "Yes/No Question",
+                english: "Do you have a dog or a cat at your house?",
+                data: {
+                    rawGloss: "YOUR HOUSE DOG OR CAT IX-you HAVE",
+                    sentenceType: "Yes/No Question",
+                    tokens: [
+                        { gloss: "YOUR", role: "TOPIC", note: "Open palm towards person" },
+                        { gloss: "HOUSE", role: "TOPIC", note: "Location/setting established first" },
+                        { gloss: "DOG", role: "TOPIC", note: "First option" },
+                        { gloss: "OR", role: "OTHER", note: "Body shift slightly left to right" },
+                        { gloss: "CAT", role: "TOPIC", note: "Second option" },
+                        { gloss: "IX-you", role: "TOPIC", note: "Point to addressee" },
+                        { gloss: "HAVE", role: "QUESTION", note: "Action verb with raised eyebrows" }
+                    ],
+                    omittedWords: ["Do", "a", "at"],
+                    nonManualMarkers: "Raise eyebrows throughout the end of the sentence ('IX-you HAVE') and tilt head forward to indicate a Yes/No question.",
+                    rulesApplied: [
+                        "Spatial Setup First: Placed 'YOUR HOUSE' at the start to establish the location before placing objects inside it.",
+                        "Removed Auxiliary 'Do' & Articles: Dropped 'Do', 'a', and 'at' as they are not used in ASL.",
+                        "Contrastive Shift: Shift shoulders slightly from one side to the other when signing 'DOG' and 'CAT'."
+                    ]
+                }
+            },
+            {
+                label: "Negation Statement",
+                english: "I am not going to school today because I am sick.",
+                data: {
+                    rawGloss: "TODAY SCHOOL IX-me GO NOT WHY IX-me SICK",
+                    sentenceType: "Negation / Rhetorical",
+                    tokens: [
+                        { gloss: "TODAY", role: "TIME", note: "Establishes present time" },
+                        { gloss: "SCHOOL", role: "TOPIC", note: "Destination/Topic first" },
+                        { gloss: "IX-me", role: "TOPIC", note: "Subject ('I')" },
+                        { gloss: "GO", role: "COMMENT", note: "Action verb" },
+                        { gloss: "NOT", role: "NEGATION", note: "Negation placed after verb with headshake" },
+                        { gloss: "WHY", role: "OTHER", note: "Rhetorical connector replacing 'because'" },
+                        { gloss: "IX-me", role: "TOPIC", note: "Subject ('I')" },
+                        { gloss: "SICK", role: "COMMENT", note: "State/condition with sick facial expression" }
+                    ],
+                    omittedWords: ["am", "to", "because", "-ing"],
+                    nonManualMarkers: "Shake head side-to-side on 'GO NOT'. Raise eyebrows on rhetorical 'WHY', then show a fatigued expression on 'SICK'.",
+                    rulesApplied: [
+                        "Rhetorical 'WHY' for 'Because': ASL commonly replaces the English word 'because' with a rhetorical 'WHY' (signed with raised eyebrows).",
+                        "Post-Verb Negation: Placed 'NOT' after the verb 'GO' accompanied by a negative headshake.",
+                        "Linking Verbs Omitted: Dropped both instances of 'am' and the preposition 'to'."
+                    ]
+                }
+            },
+            {
+                label: "Fingerspelling & Name",
+                english: "Hello, my name is Sarah and I am learning sign language.",
+                data: {
+                    rawGloss: "HELLO MY NAME fs-S-A-R-A-H IX-me LEARN ASL",
+                    sentenceType: "Statement",
+                    tokens: [
+                        { gloss: "HELLO", role: "OTHER", note: "Greeting wave" },
+                        { gloss: "MY", role: "TOPIC", note: "Possessive pronoun (flat hand on chest)" },
+                        { gloss: "NAME", role: "TOPIC", note: "Topic being introduced" },
+                        { gloss: "fs-S-A-R-A-H", role: "COMMENT", note: "Fingerspelled proper name" },
+                        { gloss: "IX-me", role: "TOPIC", note: "Point to self ('I')" },
+                        { gloss: "LEARN", role: "COMMENT", note: "Action verb" },
+                        { gloss: "ASL", role: "COMMENT", note: "Sign for American Sign Language" }
+                    ],
+                    omittedWords: ["is", "and", "am", "-ing"],
+                    nonManualMarkers: "Warm, friendly facial expression; slight head nod when stating name and 'LEARN ASL'.",
+                    rulesApplied: [
+                        "Fingerspelling Notation: Proper nouns like 'Sarah' are prefixed with 'fs-' and hyphenated to show letter-by-letter fingerspelling.",
+                        "Omitted 'is' and 'am': Removed English linking verbs between 'name' and 'Sarah', and 'I' and 'learning'.",
+                        "Dropped Conjunction 'and': A natural pause and slight body shift replaces the word 'and'."
+                    ]
+                }
+            }
+        ];
+
+        // Role Badge Styling Map
+        const ROLE_STYLES = {
+            TIME: {
+                bg: "bg-violet-50 border-violet-300 text-violet-900",
+                badge: "bg-violet-600 text-white",
+                label: "TIME"
+            },
+            TOPIC: {
+                bg: "bg-sky-50 border-sky-300 text-sky-900",
+                badge: "bg-sky-600 text-white",
+                label: "TOPIC"
+            },
+            COMMENT: {
+                bg: "bg-emerald-50 border-emerald-300 text-emerald-900",
+                badge: "bg-emerald-600 text-white",
+                label: "COMMENT"
+            },
+            QUESTION: {
+                bg: "bg-amber-50 border-amber-300 text-amber-900",
+                badge: "bg-amber-600 text-white",
+                label: "QUESTION"
+            },
+            NEGATION: {
+                bg: "bg-rose-50 border-rose-300 text-rose-900",
+                badge: "bg-rose-600 text-white",
+                label: "NEGATION"
+            },
+            OTHER: {
+                bg: "bg-slate-100 border-slate-300 text-slate-800",
+                badge: "bg-slate-600 text-white",
+                label: "CONNECTOR"
+            }
+        };
+
+        // DOM Elements
+        const englishInput = document.getElementById('englishInput');
+        const charCount = document.getElementById('charCount');
+        const convertBtn = document.getElementById('convertBtn');
+        const clearInputBtn = document.getElementById('clearInputBtn');
+        const exampleButtonsContainer = document.getElementById('exampleButtonsContainer');
+        const glossTokensContainer = document.getElementById('glossTokensContainer');
+        const rawGlossString = document.getElementById('rawGlossString');
+        const sentenceTypeBadge = document.getElementById('sentenceTypeBadge');
+        const nmmText = document.getElementById('nmmText');
+        const droppedWordsContainer = document.getElementById('droppedWordsContainer');
+        const rulesList = document.getElementById('rulesList');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const errorBanner = document.getElementById('errorBanner');
+        const errorBannerMessage = document.getElementById('errorBannerMessage');
+        const copyGlossBtn = document.getElementById('copyGlossBtn');
+        const copyBtnText = document.getElementById('copyBtnText');
+        const toggleGuideBtn = document.getElementById('toggleGuideBtn');
+        const closeGuideBtn = document.getElementById('closeGuideBtn');
+        const grammarGuideDrawer = document.getElementById('grammarGuideDrawer');
+
+        // Toggle Cheat Sheet Drawer
+        toggleGuideBtn.addEventListener('click', () => {
+            grammarGuideDrawer.classList.toggle('hidden');
+        });
+        closeGuideBtn.addEventListener('click', () => {
+            grammarGuideDrawer.classList.add('hidden');
+        });
+
+        // Update Character Count
+        function updateCharCount() {
+            const len = englishInput.value.length;
+            charCount.textContent = `${len} char${len === 1 ? '' : 's'}`;
+        }
+        englishInput.addEventListener('input', updateCharCount);
+
+        // Clear Input Button
+        clearInputBtn.addEventListener('click', () => {
+            englishInput.value = '';
+            updateCharCount();
+            englishInput.focus();
+        });
+
+        // Render Example Buttons
+        function initExamples() {
+            exampleButtonsContainer.innerHTML = '';
+            EXAMPLES.forEach((ex, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "text-xs font-medium px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-700 hover:border-indigo-300 hover:bg-indigo-50/50 hover:text-indigo-700 transition-all shadow-2xs cursor-pointer";
+                btn.textContent = ex.label;
+                btn.addEventListener('click', () => {
+                    englishInput.value = ex.english;
+                    updateCharCount();
+                    hideError();
+                    renderASLOutput(ex.data);
+                });
+                exampleButtonsContainer.appendChild(btn);
+            });
+        }
+
+        // Render ASL Output into the UI
+        function renderASLOutput(data) {
+            // 1. Sentence Type Badge
+            sentenceTypeBadge.textContent = data.sentenceType || 'Statement';
+
+            // 2. Raw Gloss String
+            rawGlossString.textContent = data.rawGloss || '';
+
+            // 3. Interactive Gloss Tokens
+            glossTokensContainer.innerHTML = '';
+            if (Array.isArray(data.tokens) && data.tokens.length > 0) {
+                data.tokens.forEach((token) => {
+                    const roleKey = (token.role || 'OTHER').toUpperCase();
+                    const style = ROLE_STYLES[roleKey] || ROLE_STYLES.OTHER;
+
+                    const card = document.createElement('div');
+                    card.className = `gloss-token group relative flex flex-col items-center border rounded-xl px-3.5 py-2.5 ${style.bg} shadow-2xs cursor-default`;
+
+                    card.innerHTML = `
+                        <span class="text-[10px] font-mono font-bold tracking-wider uppercase px-1.5 py-0.5 rounded ${style.badge} mb-1.5">
+                            ${style.label}
+                        </span>
+                        <span class="font-mono font-bold text-base sm:text-lg tracking-tight">
+                            ${escapeHtml(token.gloss)}
+                        </span>
+                        <span class="text-[11px] opacity-75 mt-1 text-center max-w-[140px] leading-tight">
+                            ${escapeHtml(token.note || '')}
+                        </span>
+                    `;
+                    glossTokensContainer.appendChild(card);
+                });
+            }
+
+            // 4. Non-Manual Markers
+            nmmText.textContent = data.nonManualMarkers || 'Maintain natural eye contact and clear facial expression matching the tone of the sentence.';
+
+            // 5. Omitted Words
+            droppedWordsContainer.innerHTML = '';
+            if (Array.isArray(data.omittedWords) && data.omittedWords.length > 0) {
+                data.omittedWords.forEach(word => {
+                    const pill = document.createElement('span');
+                    pill.className = "inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 font-mono text-xs line-through decoration-rose-500";
+                    pill.textContent = word;
+                    droppedWordsContainer.appendChild(pill);
+                });
+            } else {
+                const noneSpan = document.createElement('span');
+                noneSpan.className = "text-xs text-slate-400 italic";
+                noneSpan.textContent = "No linking words needed removal";
+                droppedWordsContainer.appendChild(noneSpan);
+            }
+
+            // 6. Grammar Rules List
+            rulesList.innerHTML = '';
+            if (Array.isArray(data.rulesApplied) && data.rulesApplied.length > 0) {
+                data.rulesApplied.forEach(rule => {
+                    const li = document.createElement('li');
+                    li.className = "flex items-start gap-2.5 bg-slate-50/90 p-3 rounded-xl border border-slate-100";
+                    li.innerHTML = `
+                        <span class="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">✓</span>
+                        <span class="leading-relaxed text-slate-700">${escapeHtml(rule)}</span>
+                    `;
+                    rulesList.appendChild(li);
+                });
+            }
+        }
+
+        // Escape HTML helper
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function showError(msg) {
+            errorBannerMessage.textContent = msg;
+            errorBanner.classList.remove('hidden');
+        }
+
+        function hideError() {
+            errorBanner.classList.add('hidden');
+        }
+
+        // Local Rule-Based Fallback Converter (in case offline or API issue occurs)
+        function localRuleBasedFallback(englishText) {
+            const clean = englishText.trim();
+            const isQuestion = clean.endsWith('?');
+            const words = clean.replace(/[.,!?;:]/g, '').split(/\s+/);
+
+            const stopWords = new Set(['a', 'an', 'the', 'is', 'am', 'are', 'was', 'were', 'be', 'been', 'being', 'to', 'do', 'does', 'did']);
+            const timeWords = new Set(['today', 'tomorrow', 'yesterday', 'now', 'later', 'morning', 'night', 'afternoon', 'tonight', 'soon', 'past', 'future']);
+            const whWords = new Set(['who', 'what', 'where', 'when', 'why', 'how', 'which']);
+            const negWords = new Set(['not', 'never', 'nothing', 'none', "don't", "doesn't", "didn't", "can't", "won't"]);
+
+            const timeBucket = [];
+            const topicCommentBucket = [];
+            const questionBucket = [];
+            const negBucket = [];
+            const dropped = [];
+
+            words.forEach(w => {
+                const lower = w.toLowerCase();
+                if (stopWords.has(lower)) {
+                    dropped.push(w);
+                } else if (timeWords.has(lower)) {
+                    timeBucket.push({ gloss: w.toUpperCase(), role: 'TIME', note: 'Time indicator placed first' });
+                } else if (whWords.has(lower)) {
+                    questionBucket.push({ gloss: w.toUpperCase(), role: 'QUESTION', note: 'WH-question moved to end' });
+                } else if (negWords.has(lower)) {
+                    negBucket.push({ gloss: w.toUpperCase().replace("'", "-"), role: 'NEGATION', note: 'Negation placed near end' });
+                } else {
+                    const upper = lower === 'i' || lower === 'me' ? 'IX-me' : (lower === 'you' ? 'IX-you' : w.toUpperCase());
+                    const role = (lower === 'i' || lower === 'you' || lower === 'he' || lower === 'she' || lower === 'we' || lower === 'they') ? 'TOPIC' : 'COMMENT';
+                    topicCommentBucket.push({ gloss: upper, role, note: role === 'TOPIC' ? 'Subject/Topic' : 'Comment/Action' });
+                }
+            });
+
+            const allTokens = [...timeBucket, ...topicCommentBucket, ...negBucket, ...questionBucket];
+            const rawGloss = allTokens.map(t => t.gloss).join(' ');
+
+            return {
+                rawGloss: rawGloss || "HELLO",
+                sentenceType: questionBucket.length > 0 ? "WH-Question" : (isQuestion ? "Yes/No Question" : "Statement"),
+                tokens: allTokens,
+                omittedWords: dropped,
+                nonManualMarkers: questionBucket.length > 0
+                    ? "Furrow eyebrows and tilt head slightly forward on the WH-question word at the end."
+                    : (isQuestion ? "Raise eyebrows and lean slightly forward for a Yes/No question." : "Maintain neutral, expressive facial grammar with slight head nods on the comment."),
+                rulesApplied: [
+                    "Ordered tokens following Time + Topic + Comment + Question/Negation structure.",
+                    dropped.length > 0 ? `Omitted English articles and linking verbs (${dropped.join(', ')}).` : "Direct sign mapping applied."
+                ]
+            };
+        }
+
+        // Call Gemini API with exponential backoff and structured JSON schema
+        async function convertWithGemini(englishSentence) {
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+            const systemInstruction = `You are an expert American Sign Language (ASL) linguistics instructor.
+Convert the user's English input into accurate ASL Gloss and grammar structure.
+Follow authentic ASL syntax rules:
+1. TIME-TOPIC-COMMENT structure: Place time indicators (YESTERDAY, TOMORROW, NOW, etc.) at the very beginning.
+2. TOPIC-COMMENT: Establish the topic/object or spatial location first, followed by the comment/action.
+3. REMOVE LINKING VERBS & ARTICLES: Omit 'a', 'an', 'the', 'is', 'am', 'are', 'was', 'were', 'to', auxiliary 'do/does/did'. List them in omittedWords.
+4. QUESTIONS AT THE END: Place WH-question words (WHO, WHAT, WHERE, WHEN, WHY, HOW) at the very end of the sentence.
+5. PRONOUNS & FINGERSPELLING: Use standard ASL gloss conventions such as IX-me (I/me), IX-you (you), IX-he/she, and fs-NAME for fingerspelled proper nouns. Use uppercase for sign words.
+6. Provide clear, friendly explanations of each grammar rule applied in rulesApplied.`;
+
+            const payload = {
+                contents: [
+                    {
+                        role: "user",
+                        parts: [{ text: `Convert this English sentence to ASL Gloss and explain the grammar: "${englishSentence}"` }]
+                    }
+                ],
+                systemInstruction: {
+                    parts: [{ text: systemInstruction }]
+                },
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            rawGloss: {
+                                type: "STRING",
+                                description: "Complete ASL Gloss string in ALL CAPS (with standard prefixes like IX- or fs- where appropriate)."
+                            },
+                            sentenceType: {
+                                type: "STRING",
+                                description: "Type of ASL sentence, e.g. 'WH-Question', 'Yes/No Question', 'Statement', 'Negation', 'Conditional'."
+                            },
+                            tokens: {
+                                type: "ARRAY",
+                                items: {
+                                    type: "OBJECT",
+                                    properties: {
+                                        gloss: { type: "STRING", description: "Individual ASL sign gloss token" },
+                                        role: {
+                                            type: "STRING",
+                                            enum: ["TIME", "TOPIC", "COMMENT", "QUESTION", "NEGATION", "OTHER"],
+                                            description: "Grammatical role in ASL Time-Topic-Comment-Question structure"
+                                        },
+                                        note: { type: "STRING", description: "Brief 2-5 word note explaining this sign's role or how it's signed" }
+                                    },
+                                    required: ["gloss", "role", "note"]
+                                }
+                            },
+                            omittedWords: {
+                                type: "ARRAY",
+                                items: { type: "STRING" },
+                                description: "List of English words or suffixes (e.g. 'are', 'the', 'a', '-ing') removed during ASL conversion."
+                            },
+                            nonManualMarkers: {
+                                type: "STRING",
+                                description: "Instructions for facial expressions, eyebrow position (raised vs furrowed), and head tilt/shake."
+                            },
+                            rulesApplied: {
+                                type: "ARRAY",
+                                items: { type: "STRING" },
+                                description: "2 to 4 clear bullet points explaining the specific ASL grammar rules applied to transform this sentence."
+                            }
+                        },
+                        required: ["rawGloss", "sentenceType", "tokens", "omittedWords", "nonManualMarkers", "rulesApplied"]
+                    }
+                }
+            };
+
+            const delays = [1000, 2000, 4000];
+            for (let attempt = 0; attempt <= delays.length; attempt++) {
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP status ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    const jsonText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (!jsonText) {
+                        throw new Error("Empty response from AI model");
+                    }
+                    return JSON.parse(jsonText);
+                } catch (err) {
+                    if (attempt === delays.length) {
+                        throw err;
+                    }
+                    await new Promise(res => setTimeout(res, delays[attempt]));
+                }
+            }
+        }
+
+        // Handle Convert Action
+        async function handleConvert() {
+            const text = englishInput.value.trim();
+            if (!text) {
+                showError("Please enter an English sentence to convert.");
+                englishInput.focus();
+                return;
+            }
+
+            hideError();
+
+            // Check if input matches one of our pre-cached examples for instant zero-latency response
+            const cachedExample = EXAMPLES.find(ex => ex.english.toLowerCase() === text.toLowerCase());
+            if (cachedExample) {
+                renderASLOutput(cachedExample.data);
+                return;
+            }
+
+            // Otherwise call Gemini API
+            loadingOverlay.classList.remove('hidden');
+            convertBtn.disabled = true;
+
+            try {
+                const aiData = await convertWithGemini(text);
+                renderASLOutput(aiData);
+            } catch (err) {
+                // Gracefully fallback to rule-based local converter so the user always gets a working result
+                const fallbackData = localRuleBasedFallback(text);
+                renderASLOutput(fallbackData);
+                showError("AI service was temporarily unreachable; used built-in ASL rule engine instead.");
+            } finally {
+                loadingOverlay.classList.add('hidden');
+                convertBtn.disabled = false;
+            }
+        }
+
+        convertBtn.addEventListener('click', handleConvert);
+
+        // Allow Ctrl+Enter or Cmd+Enter to submit
+        englishInput.addEventListener('keydown', (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+                e.preventDefault();
+                handleConvert();
+            }
+        });
+
+        // Copy Gloss to Clipboard (using document.execCommand for iframe compatibility)
+        copyGlossBtn.addEventListener('click', () => {
+            const textToCopy = rawGlossString.textContent;
+            if (!textToCopy) return;
+
+            const tempInput = document.createElement('textarea');
+            tempInput.value = textToCopy;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+
+            copyBtnText.textContent = "Copied!";
+            setTimeout(() => {
+                copyBtnText.textContent = "Copy Gloss";
+            }, 1800);
+        });
+
+        // Initialize app on load
+        window.onload = function () {
+            initExamples();
+            updateCharCount();
+            renderASLOutput(EXAMPLES[0].data);
+        };
+    </script>
+</body>
+</html>
